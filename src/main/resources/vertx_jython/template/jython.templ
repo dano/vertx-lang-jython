@@ -141,12 +141,11 @@
 
         } else if (kind.basic) {
 			if (typeName == 'char' || typeName == 'java.lang.Character') {
-				return "str(" + convertName(paramName) + ")";
-				return "util.convert_char_to_java(" + convertName(paramName) + ")";
+				return "chr(" + convertName(paramName) + ")";
 			} else if (typeName == 'long' || typeName == 'java.lang.Long') {
 				return "long(" + convertName(paramName) + ")";
 			} else if (typeName == 'byte' || typeName == 'java.lang.Byte') {
-				return "str(" + convertName(paramName) + ")";
+				return "int(" + convertName(paramName) + ")";
 			} else if (typeName == 'short' || typeName == 'java.lang.Short') {
 				return "int(" + convertName(paramName) + ")";
 			} else if (typeName == 'float' || typeName == 'java.lang.Float') {
@@ -163,7 +162,7 @@
 			var elementName = element.name;
 			return "[" + convParam("i", element)  +
 				   " for i in " + paramName + "] if " + paramName +
-                       " is not None else None)";
+                       " is not None else None";
         } else if (kind == CLASS_SET) {
 			var element = type.args[0];
 			var elementName = element.name;
@@ -373,12 +372,12 @@
 		@comment{"Import the Jython return type inside of the method if its not "}
 		@comment{"already imported. Needed to avoid circular imports."}
 		@if{baseMethod.returnType.kind == CLASS_API &&
-			!imported.contains(baseMethod.returnType.raw.simpleName) &&
-			baseMethod.returnType.raw.simpleName != ifaceSimpleName}
+		  !imported.contains(baseMethod.returnType.raw.simpleName) &&
+		  baseMethod.returnType.raw.simpleName != ifaceSimpleName}
 			@code{refedPackage = baseMethod.returnType.raw.packageName}
 			@code{lastPackage = refedPackage.substring(refedPackage.lastIndexOf('.') + 1)}
 			@code{refedType = baseMethod.returnType.raw.simpleName}
-			@{ind}    from vertx_jython.@{lastPackage}.@{convertName(refedType)} import @{refedType}\n
+			@{ind}    from @{baseMethod.returnType.raw.moduleName}_jython.@{lastPackage}.@{convertName(refedType)} import @{refedType}\n
 		@end{}
 		@if{childMethods.isEmpty()}
 			@if{requiresTypeCheck([baseMethod])}
@@ -503,7 +502,6 @@
 # See the License for the specific language governing permissions and\n
 # limitations under the License.\n
 
-from __future__ import unicode_literals, print_function, absolute_import\n
 from vertx_jython import util\n
 from vertx_jython.compat import long, basestring\n
 from vertx_jython.futures import Future as _Future\n
@@ -517,7 +515,7 @@ from vertx_jython.futures import Future as _Future\n
 		@code{refedPackage = referencedType.raw.packageName}
 		@code{lastPackage = refedPackage.substring(refedPackage.lastIndexOf('.') + 1)}
 		@code{refedType = referencedType.raw.simpleName}
-		from vertx_jython.@{lastPackage}.@{convertName(refedType)} import @{refedType}\n
+		from @{referencedType.raw.moduleName}_jython.@{lastPackage}.@{convertName(refedType)} import @{refedType}\n
 		@code{imported.add(referencedType.simpleName)}
 	@end{}
 @end{}

@@ -1,31 +1,25 @@
-from __future__ import unicode_literals, print_function, absolute_import
 import re
 import sys
 import unittest
 
-from testmodel_python.testmodel.test_interface import TestInterface
-from testmodel_python.testmodel.refed_interface1 import RefedInterface1
-from testmodel_python.testmodel.refed_interface2 import RefedInterface2
-from testmodel_python.testmodel.super_interface1 import SuperInterface1
-from testmodel_python.testmodel.super_interface2 import SuperInterface2
-from testmodel_python.testmodel.generic_refed_interface import GenericRefedInterface
-from testmodel_python.testmodel.factory import Factory
-from acme_python.pkg.my_interface import MyInterface
-from acme_python.sub.sub_interface import SubInterface
+from testmodel_jython.testmodel.test_interface import TestInterface
+from testmodel_jython.testmodel.refed_interface1 import RefedInterface1
+from testmodel_jython.testmodel.refed_interface2 import RefedInterface2
+from testmodel_jython.testmodel.super_interface1 import SuperInterface1
+from testmodel_jython.testmodel.super_interface2 import SuperInterface2
+from testmodel_jython.testmodel.generic_refed_interface import GenericRefedInterface
+from testmodel_jython.testmodel.factory import Factory
+from acme_jython.pkg.my_interface import MyInterface
+from acme_jython.sub.sub_interface import SubInterface
 
-from vertx_python import util
-from vertx_python.util import frozendict
-from vertx_python.compat import long, unicode, iteritems
+from vertx_jython import util
 
-from py4j.protocol import Py4JJavaError
+import io.vertx.codegen.testmodel.TestInterfaceImpl
+import io.vertx.codegen.testmodel.RefedInterface1Impl
 
-util.vertx_init()
-
-with util.handle_vertx_shutdown(on_error_only=True):
-    jvm = util.jvm
-    obj = TestInterface(jvm.io.vertx.codegen.testmodel.TestInterfaceImpl())
-    refed_obj = RefedInterface1(jvm.io.vertx.codegen.testmodel.RefedInterface1Impl())
-    refed_obj2 = RefedInterface1(jvm.io.vertx.codegen.testmodel.RefedInterface1Impl())
+obj = TestInterface(io.vertx.codegen.testmodel.TestInterfaceImpl())
+refed_obj = RefedInterface1(io.vertx.codegen.testmodel.RefedInterface1Impl())
+refed_obj2 = RefedInterface1(io.vertx.codegen.testmodel.RefedInterface1Impl())
 
 class TestAPI(unittest.TestCase):
     def testMethodWithBasicParams(self):
@@ -181,7 +175,7 @@ class TestAPI(unittest.TestCase):
         obj.method_with_data_object_param(**data_object)
 
 
-    #TODO not really possible to pass a Null object w/ Python API
+    #TODO not really possible to pass a Null object w/ Jython API
     #def testNullDataObjectParam(self):
         #data_object = {}
         #obj.method_with_null_data_object_param(**data_object)
@@ -493,9 +487,9 @@ class TestAPI(unittest.TestCase):
         def handler(val):
             self.assertEqual(type(val), set)
             for elt in val:
-                self.assertEqual(type(elt), frozendict)
-            self.assertEqual(val, set([frozendict(cheese='stilton'), 
-                                       frozendict(socks='tartan')]))
+                self.assertEqual(type(elt), dict)
+            self.assertEqual(val, set([dict(cheese='stilton'),
+                                       dict(socks='tartan')]))
             dct['count'] += 1
         obj.method_with_handler_set_json_object(handler)
         self.assertEqual(dct['count'], 1)
@@ -518,8 +512,8 @@ class TestAPI(unittest.TestCase):
         def handler(val):
             self.assertEqual(type(val), set)
             self.assertEqual(len(val), 1)
-            self.assertEqual(val, set([frozendict({'outer' : frozendict({'socks' : 'tartan'}),
-                                                   'list' : frozenset(['yellow', 'blue'])})
+            self.assertEqual(val, set([dict({'outer' : dict({'socks' : 'tartan'}),
+                                                   'list' : set(['yellow', 'blue'])})
                                      ])
                             )
             dct['count'] += 1
@@ -533,9 +527,9 @@ class TestAPI(unittest.TestCase):
             self.assertIsNone(err)
             self.assertEqual(type(val), set)
             for elt in val:
-                self.assertEqual(type(elt), frozendict)
-            self.assertEqual(val, set([frozendict(cheese='stilton'), 
-                                       frozendict(socks='tartan')]))
+                self.assertEqual(type(elt), dict)
+            self.assertEqual(val, set([dict(cheese='stilton'),
+                                       dict(socks='tartan')]))
             dct['count'] += 1
         obj.method_with_handler_async_result_set_json_object(handler)
         self.assertEqual(dct['count'], 1)
@@ -560,8 +554,8 @@ class TestAPI(unittest.TestCase):
             self.assertIsNone(err)
             self.assertEqual(type(val), set)
             self.assertEqual(len(val), 1)
-            self.assertEqual(val, set([frozendict({'outer' : frozendict({'socks' : 'tartan'}),
-                                                   'list' : frozenset(['yellow', 'blue'])})
+            self.assertEqual(val, set([dict({'outer' : dict({'socks' : 'tartan'}),
+                                                   'list' : set(['yellow', 'blue'])})
                                      ])
                             )
             dct['count'] += 1
@@ -637,9 +631,9 @@ class TestAPI(unittest.TestCase):
         def handler(val):
             self.assertEqual(type(val), set)
             for elt in val:
-                self.assertEqual(type(elt), frozenset)
-            self.assertEqual(val, set([frozenset(['green', 'blue']),
-                                       frozenset(['yellow', 'purple'])]))
+                self.assertEqual(type(elt), set)
+            self.assertEqual(val, set([set(['green', 'blue']),
+                                       set(['yellow', 'purple'])]))
             dct['count'] += 1
         obj.method_with_handler_set_json_array(handler)
         self.assertEqual(dct['count'], 1)
@@ -661,8 +655,8 @@ class TestAPI(unittest.TestCase):
         dct = dict(count=0)
         def handler(val):
             self.assertEqual(type(val), set)
-            self.assertEqual(val, set([frozenset([frozendict({'foo' : 'hello'})]), 
-                                       frozenset([frozendict({'bar' : 'bye'})])
+            self.assertEqual(val, set([set([dict({'foo' : 'hello'})]),
+                                       set([dict({'bar' : 'bye'})])
                                      ])
                             )
             dct['count'] += 1
@@ -676,9 +670,9 @@ class TestAPI(unittest.TestCase):
             self.assertIsNone(err)
             self.assertEqual(type(val), set)
             for elt in val:
-                self.assertEqual(type(elt), frozenset)
-            self.assertEqual(val, set([frozenset(['purple', 'yellow']), 
-                                       frozenset(['blue', 'green'])
+                self.assertEqual(type(elt), set)
+            self.assertEqual(val, set([set(['purple', 'yellow']),
+                                       set(['blue', 'green'])
                                      ])
                             )
             dct['count'] += 1
@@ -715,8 +709,8 @@ class TestAPI(unittest.TestCase):
         def handler(val, err):
             self.assertIsNone(err)
             self.assertEqual(type(val), set)
-            self.assertEqual(val, set([frozenset([frozendict({'foo' : 'hello'})]), 
-                                       frozenset([frozendict({'bar' : 'bye'})])
+            self.assertEqual(val, set([set([dict({'foo' : 'hello'})]),
+                                       set([dict({'bar' : 'bye'})])
                                      ])
                             )
             dct['count'] += 1
@@ -750,8 +744,8 @@ class TestAPI(unittest.TestCase):
     def testMethodWithHandlerSetDataObject(self):
         dct = dict(count=0)
         def handler(val):
-            self.assertEqual(val, set([frozendict({'foo' : 'String 1', 'bar' : 1, 'wibble' : 1.1}),
-                                       frozendict({'foo' : 'String 2', 'bar' : 2, 'wibble' : 2.2})
+            self.assertEqual(val, set([dict({'foo' : 'String 1', 'bar' : 1, 'wibble' : 1.1}),
+                                       dict({'foo' : 'String 2', 'bar' : 2, 'wibble' : 2.2})
                                       ])
                             )
             dct['count'] += 1
@@ -796,8 +790,8 @@ class TestAPI(unittest.TestCase):
         dct = dict(count=0)
         def handler(val, err):
             self.assertIsNone(err)
-            self.assertEqual(val, set([frozendict({'foo' : 'String 1', 'bar' : 1, 'wibble' : 1.1}),
-                                       frozendict({'foo' : 'String 2', 'bar' : 2, 'wibble' : 2.2})
+            self.assertEqual(val, set([dict({'foo' : 'String 1', 'bar' : 1, 'wibble' : 1.1}),
+                                       dict({'foo' : 'String 2', 'bar' : 2, 'wibble' : 2.2})
                                       ])
                             )
             dct['count'] += 1
@@ -1322,11 +1316,11 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(type(val), unicode)
         self.assertEqual(val, 'bar')
         map['juu'] = 'daa'
-        self.assertEqual(map.to_python(), {'foo' : 'bar','juu' : 'daa'})
+        self.assertEqual(map, {'foo' : 'bar','juu' : 'daa'})
         def test():
             map['wibble'] = 123
         self.assertRaises(Exception, test)
-        self.assertEqual(map.to_python(), {'foo' : 'bar','juu' : 'daa'})
+        self.assertEqual(map, {'foo' : 'bar','juu' : 'daa'})
 
 
     def testMapJsonObjectReturn(self):
@@ -1335,11 +1329,11 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(type(json), dict)
         self.assertEqual(json['wibble'], 'eek')
         map['bar'] = {'juu' : 'daa'}
-        self.assertEqual(map.to_python(), {'foo' : {'wibble' : 'eek'}, 'bar' : {'juu' : 'daa'}})
+        self.assertEqual(map, {'foo' : {'wibble' : 'eek'}, 'bar' : {'juu' : 'daa'}})
         def test():
             map['juu'] = 123
         self.assertRaises(Exception, test)
-        self.assertEqual(map.to_python(), {'foo' : {'wibble' : 'eek'}, 'bar' : {'juu' : 'daa'}})
+        self.assertEqual(map, {'foo' : {'wibble' : 'eek'}, 'bar' : {'juu' : 'daa'}})
 
 
     def testMapComplexJsonObjectReturn(self):
@@ -1354,11 +1348,11 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(type(arr), list)
         self.assertEqual(arr, ['wibble'])
         map['bar'] = ['spidey']
-        self.assertEqual(map.to_python(), {'foo' : ['wibble'],'bar' : ['spidey']})
+        self.assertEqual(map, {'foo' : ['wibble'],'bar' : ['spidey']})
         def test():
             map['juu'] = 123
         self.assertRaises(Py4JJavaError, test)
-        self.assertEqual(map.to_python(), {'foo' : ['wibble'],'bar' : ['spidey']})
+        self.assertEqual(map, {'foo' : ['wibble'],'bar' : ['spidey']})
 
 
     def testMapLongReturn(self):
@@ -1367,11 +1361,11 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(type(num), long)
         self.assertEqual(num, 123)
         map['bar'] = 321
-        self.assertEqual(map.to_python(), {'foo' : 123,'bar' : 321})
+        self.assertEqual(map, {'foo' : 123,'bar' : 321})
         def test():
             map['juu'] = 'something'
         self.assertRaises(Py4JJavaError, test)
-        self.assertEqual(map.to_python(), {'foo' : 123,'bar' : 321})
+        self.assertEqual(map, {'foo' : 123,'bar' : 321})
 
 
     def testMapIntegerReturn(self):
@@ -1380,11 +1374,11 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(type(num), int)
         self.assertEqual(num, 123)
         map['bar'] = 321
-        self.assertEqual(map.to_python(), {'foo' : 123,'bar' : 321})
+        self.assertEqual(map, {'foo' : 123,'bar' : 321})
         def test():
             map['juu'] = 'something'
         self.assertRaises(Py4JJavaError, test)
-        self.assertEqual(map.to_python(), {'foo' : 123,'bar' : 321})
+        self.assertEqual(map, {'foo' : 123,'bar' : 321})
 
 
     def testMapShortReturn(self):
@@ -1393,11 +1387,11 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(type(num), int)
         self.assertEqual(num, 123)
         map['bar'] = 321
-        self.assertEqual(map.to_python(), {'foo' : 123,'bar' : 321})
+        self.assertEqual(map, {'foo' : 123,'bar' : 321})
         def test():
             map['juu'] = 'something'
         self.assertRaises(Py4JJavaError, test)
-        self.assertEqual(map.to_python(), {'foo' : 123,'bar' : 321})
+        self.assertEqual(map, {'foo' : 123,'bar' : 321})
 
 
     def testMapByteReturn(self):
@@ -1406,11 +1400,11 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(type(num), int)
         self.assertEqual(num, 123)
         map['bar'] = 12
-        self.assertEqual(map.to_python(), {'foo' : 123,'bar' : 12})
+        self.assertEqual(map, {'foo' : 123,'bar' : 12})
         def test():
             map['juu'] = 'something'
         self.assertRaises(Py4JJavaError, test)
-        self.assertEqual(map.to_python(), {'foo' : 123,'bar' : 12})
+        self.assertEqual(map, {'foo' : 123,'bar' : 12})
 
 
     def testMapCharacterReturn(self):
@@ -1419,11 +1413,11 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(type(num), unicode)
         self.assertEqual(num, 'X')
         map['bar'] = 'Y'
-        self.assertEqual(map.to_python(), {'foo' : 'X','bar' : 'Y'})
+        self.assertEqual(map, {'foo' : 'X','bar' : 'Y'})
         def test():
             map['juu'] = 'something'
         self.assertRaises(ValueError, test)
-        self.assertEqual(map.to_python(), {'foo' : 'X','bar' : 'Y'})
+        self.assertEqual(map, {'foo' : 'X','bar' : 'Y'})
 
 
     def testMapBooleanReturn(self):
@@ -1432,10 +1426,10 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(type(num), bool)
         self.assertEqual(num, True)
         map['bar'] = False
-        self.assertEqual(map.to_python(), {'foo' : True,'bar' : False})
+        self.assertEqual(map, {'foo' : True,'bar' : False})
         map['juu'] = 'something'
         map['daa'] = None
-        self.assertEqual(map.to_python(), {'foo' : True,'bar' : False,'juu' : True,'daa' : False})
+        self.assertEqual(map, {'foo' : True,'bar' : False,'juu' : True,'daa' : False})
 
 
     def testMapFloatReturn(self):
@@ -1461,11 +1455,11 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(type(num), float)
         self.assertEqual(num, 0.123)
         map['bar'] = 0.321
-        self.assertEqual(map.to_python(), {'foo' : 0.123,'bar' : 0.321})
+        self.assertEqual(map, {'foo' : 0.123,'bar' : 0.321})
         def test():
             map['juu'] = 'something'
         self.assertRaises(Py4JJavaError, test)
-        self.assertEqual(map.to_python(), {'foo' : 0.123,'bar' : 0.321})
+        self.assertEqual(map, {'foo' : 0.123,'bar' : 0.321})
 
 
     def testMapNullReturn(self):
@@ -1533,8 +1527,8 @@ class TestAPI(unittest.TestCase):
     def testSetJsonObjectReturn(self):
         ret = obj.method_with_set_json_object_return()
         self.assertEqual(type(ret), set)
-        self.assertEqual(ret, set([frozendict({'foo':'bar'}),
-                                   frozendict({'blah':'eek'})
+        self.assertEqual(ret, set([dict({'foo':'bar'}),
+                                   dict({'blah':'eek'})
                                   ])
                         )
 
@@ -1542,8 +1536,8 @@ class TestAPI(unittest.TestCase):
     def testSetComplexJsonObjectReturn(self):
         ret = obj.method_with_set_complex_json_object_return()
         self.assertEqual(type(ret), set)
-        self.assertEqual(ret, set([frozendict({'outer' : frozendict({'socks' : 'tartan'}), 
-                                               'list': frozenset(['yellow', 'blue'])})
+        self.assertEqual(ret, set([dict({'outer' : dict({'socks' : 'tartan'}),
+                                               'list': set(['yellow', 'blue'])})
                                  ])
                         )
 
@@ -1551,8 +1545,8 @@ class TestAPI(unittest.TestCase):
     def testSetJsonArrayReturn(self):
         ret = obj.method_with_set_json_array_return()
         self.assertIsInstance(ret, set)
-        self.assertEqual(ret, set([frozenset(['foo']), 
-                                   frozenset(['blah'])
+        self.assertEqual(ret, set([set(['foo']),
+                                   set(['blah'])
                                   ])
                         )
 
@@ -1560,8 +1554,8 @@ class TestAPI(unittest.TestCase):
     def testSetComplexJsonArrayReturn(self):
         ret = obj.method_with_set_complex_json_array_return()
         self.assertIsInstance(ret, set)
-        self.assertEqual(ret, set([frozenset([frozendict({'foo' : 'hello'})]), 
-                                   frozenset([frozendict({'bar' : 'bye'})])
+        self.assertEqual(ret, set([set([dict({'foo' : 'hello'})]),
+                                   set([dict({'bar' : 'bye'})])
                                   ])
                         )
 
@@ -1612,12 +1606,12 @@ class TestAPI(unittest.TestCase):
             set([12, 13]),
             set([1234, 1345]),
             set([123, 456]),
-            set([frozendict({'foo':'bar'}), frozendict({'eek':'wibble'})]),
-            set([frozenset(['foo']), frozenset(['blah'])]),
+            set([dict({'foo':'bar'}), dict({'eek':'wibble'})]),
+            set([set(['foo']), set(['blah'])]),
             set([RefedInterface1(jvm.io.vertx.codegen.testmodel.RefedInterface1Impl()).set_string('foo'), 
              RefedInterface1(jvm.io.vertx.codegen.testmodel.RefedInterface1Impl()).set_string('bar')]),
-            set([frozendict({'foo':'String 1','bar':1,'wibble':1.1}), 
-                 frozendict({'foo':'String 2','bar':2,'wibble':2.2})]),
+            set([dict({'foo':'String 1','bar':1,'wibble':1.1}),
+                 dict({'foo':'String 2','bar':2,'wibble':2.2})]),
             set(['TIM', 'JULIEN'])
         )
 
@@ -1643,21 +1637,4 @@ class TestAPI(unittest.TestCase):
     def testEnumParam(self):
         ret = obj.method_with_enum_param('sausages', "TIM")
         self.assertEqual(ret, 'sausagesTIM')
-
-
-if __name__ == "__main__":
-    meth = sys.argv[-1]
-    err = False
-    print("Testing {}".format(meth))
-    with util.handle_vertx_shutdown():
-        if meth == "testEverything":
-            out = unittest.main(exit=False, argv=[sys.argv[0]])
-            result = out.result
-            if result.failures or result.errors:
-                err = True
-        else:
-            case = TestAPI(meth)
-            case.debug()
-    if err:
-        sys.exit(1)
 
