@@ -17,6 +17,8 @@ test-output
 test-results
 test-tmp
 *.class
+*.pyc
+*.pyo
 src/gen
 src/main/api
 src/test/api
