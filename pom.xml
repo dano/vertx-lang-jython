@@ -16,6 +16,9 @@
 
   <properties>
     <stack.version>3.3.0-SNAPSHOT</stack.version>
+    <asciidoc.dir>${project.basedir}/src/main/asciidoc</asciidoc.dir>
+    <tools.jar>${java.home}/../lib/tools.jar</tools.jar>
+
     <netty.version>4.1.0.CR7</netty.version>
     <log4j.version>1.2.17</log4j.version>
     <slf4j.version>1.7.21</slf4j.version>
@@ -38,6 +41,17 @@
   <dependencies>
 
     <dependency>
+      <groupId>org.python</groupId>
+      <artifactId>jython-standalone</artifactId>
+      <version>2.7.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler-proxy</artifactId>
+      <version>${netty.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-codegen</artifactId>
       <scope>provided</scope>
@@ -54,6 +68,11 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-codetrans</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <version>${log4j.version}</version>
@@ -63,6 +82,18 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${log4j2.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${log4j2.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -99,6 +130,39 @@
   </dependencies>
 
   <build>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <systemPropertyVariables>
+              <java.util.logging.SimpleFormatter.format>%4$s: %3$s - %5$s %6$s%n</java.util.logging.SimpleFormatter.format>
+            </systemPropertyVariables>
+            <additionalClasspathElements>
+              <additionalClasspathElement>${project.build.testSourceDirectory}</additionalClasspathElement>
+              <additionalClasspathElement>${project.basedir}/src/main/resources</additionalClasspathElement>
+            </additionalClasspathElements>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>default-clean</id>
+              <configuration>
+                <filesets>
+                  <fileset>
+                    <directory>${asciidoc.dir}</directory>
+                  </fileset>
+                </filesets>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
 
     <plugins>
       <plugin>
@@ -161,6 +225,49 @@
               <sourceDirectory>${project.build.directory}/sources/vertx-core</sourceDirectory>
             </configuration>
           </execution>
+
+          <!-- We have to run the annotation processor again to process doc overrides -->
+          <execution>
+            <id>docgen-docs</id>
+            <goals>
+              <goal>process</goal>
+            </goals>
+            <phase>prepare-package</phase>
+            <configuration>
+              <systemProperties>
+                <java.util.logging.SimpleFormatter.format>%4$s: %3$s - %5$s %6$s%n</java.util.logging.SimpleFormatter.format>
+              </systemProperties>
+              <processors>
+                <processor>io.vertx.docgen.DocGenProcessor</processor>
+              </processors>
+              <optionMap>
+                <docgen.output>${asciidoc.dir}/python</docgen.output>
+              </optionMap>
+              <sourceDirectory>${project.build.directory}/sources/vertx-core</sourceDirectory>
+            </configuration>
+          </execution>
+
+          <!-- We have to run the annotation processor again to process doc overrides -->
+          <execution>
+            <id>docgen-docoverrides</id>
+            <goals>
+              <goal>process</goal>
+            </goals>
+            <phase>prepare-package</phase>
+            <configuration>
+              <systemProperties>
+                <java.util.logging.SimpleFormatter.format>%4$s: %3$s - %5$s %6$s%n</java.util.logging.SimpleFormatter.format>
+              </systemProperties>
+              <processors>
+                <processor>io.vertx.docgen.DocGenProcessor</processor>
+              </processors>
+              <optionMap>
+                <docgen.output>${asciidoc.dir}/python</docgen.output>
+              </optionMap>
+              <sourceDirectory>src/main/docoverride</sourceDirectory>
+            </configuration>
+          </execution>
+
           <!-- Run the annotation processor on codegen and generate the jython codegen -->
           <execution>
             <id>generate-codegen</id>
@@ -189,6 +296,27 @@
             <version>${junit.version}</version>
           </dependency>
         </dependencies>
+      </plugin>
+      <plugin>
+        <groupId>org.asciidoctor</groupId>
+        <artifactId>asciidoctor-maven-plugin</artifactId>
+        <version>1.5.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <sourceDirectory>${asciidoc.dir}</sourceDirectory>
+              <outputDirectory>${project.build.directory}/docs/vertx-core</outputDirectory>
+              <backend>html</backend>
+              <doctype>book</doctype>
+              <preserveDirectories>true</preserveDirectories>
+              <relativeBaseDir>true</relativeBaseDir>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

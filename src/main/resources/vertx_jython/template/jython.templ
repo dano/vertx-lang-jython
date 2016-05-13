@@ -3,9 +3,10 @@
 
 @code{
 	def requiresTypeCheck(methods) {
+		requiresCheck = [CLASS_PRIMITIVE, CLASS_BOXED_PRIMITIVE, CLASS_STRING, CLASS_JSON_ARRAY, CLASS_JSON_OBJECT, CLASS_HANDLER, CLASS_DATA_OBJECT];
 		for (method : methods) {
 			for (param : method.params) {
-				if ([CLASS_PRIMITIVE, CLASS_BOXED_PRIMITIVE, CLASS_STRING, CLASS_JSON_ARRAY, CLASS_JSON_OBJECT, CLASS_HANDLER, CLASS_DATA_OBJECT].contains(param.type.kind)) {
+				if (requiresCheck.contains(param.type.kind)) {
 					return true;
 				}
 			}
@@ -60,10 +61,6 @@
 		out += ")";
 		return out;	
 	}
-
-	def boolToStr(b) {
-		return (b) ? "True" : "False";
-    }
 
 	/*
      * Generate the code that converts a Java return to the corresponding Jython value.
@@ -126,24 +123,6 @@
 			}
 		}
 		return expr;
-	}
-
-	/*
-     * Generate the code that converts a parameter from Jython to Java to
-     * call a Java API method.
-	 */
-	def getHandlerName(type) {
-		if (type.kind == CLASS_LIST || type.kind == CLASS_SET) {
-			var elem = type.args[0];
-			var elemname = getHandlerName(elem);
-		} else {
-			var elemname = "";
-		}
-		if (type.raw != null) {
-			return type.raw.simpleName + elemname;
-		} else {
-			return type.name + elemname;
-		}
 	}
 
 	def convParam(argName, type) {
@@ -277,14 +256,13 @@
 @declare{'genMethod'}
 	@code{methodList = methodsByName.get(methodName);  method = methodList.get(0);}
 
-
 	@code{requiredParams = []; optionalParams = []; optionsParam = null; asyncResultParam = null; paramNames = []; cnt = 0; needsFuture = false;}
 	@foreach{method: methodList}
+		@if{method.kind == METHOD_FUTURE}
+			@code{needsFuture = true}
+		@end{}
 		@if{cnt == 0}
 			@foreach{param: method.params}
-				@if{method.kind == METHOD_FUTURE}
-					@code{needsFuture = true}
-				@end{}
 				@if{param.type.kind == CLASS_DATA_OBJECT}
 					@code{optionsParam = param}
 				@else{param.type.kind == CLASS_HANDLER && 
@@ -297,9 +275,6 @@
 		@else{}
 			@code{newRequiredParams = []}
 			@foreach{param: method.params}
-				@if{method.kind == METHOD_FUTURE}
-					@code{needsFuture = true}
-				@end{}
 				@if{!paramNames.contains(param.name)}@code{paramNames.add(param.name)}@end{}
 				@if{param.type.kind == CLASS_DATA_OBJECT}
 					@code{optionsParam = param}
@@ -412,7 +387,7 @@
 					@{ind}        @{genMethodCall(baseMethod)}\n
 				@else{}
 					@if{needsFuture}
-						@{ind}        out = @{convReturn(baseMethod.returnType, 
+						@{ind}        out = @{convReturn(baseMethod.returnType,
 													     genMethodCall(baseMethod), false)}\n
 						
 						@{ind}        if @{convertName(asyncResultParam.name)} is None:\n
@@ -420,7 +395,7 @@
 						@{ind}        else:\n
 						@{ind}            return out\n
 					@else{}	
-						@{ind}        return @{convReturn(baseMethod.returnType, 
+						@{ind}        return @{convReturn(baseMethod.returnType,
 													    genMethodCall(baseMethod), false)}\n
 					@end{}
 				@end{}
@@ -431,7 +406,7 @@
 					@{ind}    @{genMethodCall(baseMethod)}\n
 				@else{}
 					@if{needsFuture}
-						@{ind}    out = @{convReturn(baseMethod.returnType, 
+						@{ind}    out = @{convReturn(baseMethod.returnType,
 													     genMethodCall(baseMethod), false)}\n
 						
 						@{ind}    if @{convertName(asyncResultParam.name)} is None:\n
@@ -439,7 +414,7 @@
 						@{ind}    else:\n
 						@{ind}        return out\n
 					@else{}	
-						@{ind}    return @{convReturn(baseMethod.returnType, 
+						@{ind}    return @{convReturn(baseMethod.returnType,
 													  genMethodCall(baseMethod), false)}\n
 					@end{}
 				@end{}
@@ -528,8 +503,6 @@
 # See the License for the specific language governing permissions and\n
 # limitations under the License.\n
 
-@comment{"Import utility functions into all modules"}
-
 from __future__ import unicode_literals, print_function, absolute_import\n
 from vertx_jython import util\n
 from vertx_jython.compat import long, basestring\n
@@ -548,7 +521,6 @@ from vertx_jython.futures import Future as _Future\n
 		@code{imported.add(referencedType.simpleName)}
 	@end{}
 @end{}
-
 \n
 
 @comment{"The top level vars for the module"}
