@@ -1,4 +1,4 @@
-@comment{"Generate a Python class"}
+@comment{"Generate a Jython class"}
 @comment{"======================="}
 
 @code{
@@ -41,7 +41,7 @@
 	def genMethodCall(method) {
 		out = "";
 		if (static) {
-			out += "util.jvm." + ifacePackageName + "." + ifaceSimpleName;
+			out += ifacePackageName + "." + ifaceSimpleName;
 		} else {
 			out += "self.j" + ifaceName;
 		}
@@ -66,7 +66,7 @@
     }
 
 	/*
-     * Generate the code that converts a Java return to the corresponding Python value.
+     * Generate the code that converts a Java return to the corresponding Jython value.
      * This is also used for converting values returned from Java API via handlers.
      */
 	def convReturn(type, expr, hashable) {
@@ -88,24 +88,22 @@
 			}
 			return settype + "([" + convReturn(elementType, "elt", true) + " for elt in " + expr + "])";
 		} else if (kind == CLASS_JSON_OBJECT) {
-			return "util.java_to_python(" + expr + ", hashable=" + boolToStr(hashable) + ")";
+			return expr;
 		} else if (kind == CLASS_JSON_ARRAY) {
-			return "util.java_to_python(" + expr + ", hashable=" + boolToStr(hashable) + ")";
+			return expr;
 		} else if (kind == CLASS_DATA_OBJECT) {
-			return "util.data_object_to_json(" + expr + ", hashable=" + boolToStr(hashable) + ")";
+		    return "dict(" + expr + ".toJson())";
 		} else if (kind == CLASS_MAP) {
-			var valueType = type.args[1];
-			return "util.java_map_to_python(" + expr + ", lambda x:" + 
-                    convReturn(valueType, "x", hashable) + ", lambda y:" + convParam("y", valueType) + ")";
+			return "dict(" + expr + ")";
 		} else if (kind == CLASS_API) {
 			if (type.raw != null) {
 				if (type.raw.simpleName.equals("Throwable")) {
-					return "util.java_to_python(" + expr + ")";
+					return expr;
 				} else {
 					return "util.handle_none(" + expr + ", " + type.raw.simpleName + ")";
 				}
 			} else {
-				return "util.java_to_python(" + expr ")";
+				return expr;
 			}
 		} else if (kind == CLASS_ENUM) {
 			return expr + ".toString()";
@@ -127,11 +125,11 @@
 				return expr;
 			}
 		}
-		return "util.java_to_python(" + expr + ", hashable=" + boolToStr(hashable) + ")";
+		return expr;
 	}
 
 	/*
-     * Generate the code that converts a parameter from Python to Java to 
+     * Generate the code that converts a parameter from Jython to Java to
      * call a Java API method.
 	 */
 	def getHandlerName(type) {
@@ -153,98 +151,57 @@
 		var kind = type.kind;
 		var typeName = type.name;
 		if (kind == CLASS_HANDLER) {
-			var element = type.args[0];
-			if (element.kind == CLASS_ASYNC_RESULT) {
-				var innerarg = element.args[0];
-				return "Async" + getHandlerName(innerarg) + "Handler(" + convertName(paramName) + ")";
-			} else {
-				return getHandlerName(element) + "Handler(" + convertName(paramName) + ")";
-            }
+			return convertName(paramName);
 		} else if (kind == CLASS_JSON_OBJECT) {
-			return "util.dict_to_json(" + convertName(paramName) + ")";
+			return "io.vertx.core.json.JsonObject(" + convertName(paramName) + ")";
         } else if (kind == CLASS_JSON_ARRAY) {
-			return "util.list_to_json(" + convertName(paramName) + ")";
+			return "io.vertx.core.json.JsonArray(" + convertName(paramName) + ")";
         } else if (kind == CLASS_DATA_OBJECT) {
-			return type.simpleName + "(util.dict_to_json(" + convertName(paramName) + "))" + 
+			return type.simpleName + "(io.vertx.core.json.JsonObject(" + convertName(paramName) + "))" +
                    " if " + convertName(paramName) + " is not None else None";
 
         } else if (kind.basic) {
 			if (typeName == 'char' || typeName == 'java.lang.Character') {
+				return "str(" + convertName(paramName) + ")";
 				return "util.convert_char_to_java(" + convertName(paramName) + ")";
 			} else if (typeName == 'long' || typeName == 'java.lang.Long') {
-				return "util.convert_long_to_java(" + convertName(paramName) + ")";
+				return "long(" + convertName(paramName) + ")";
 			} else if (typeName == 'byte' || typeName == 'java.lang.Byte') {
-				return "util.convert_byte_to_java(" + convertName(paramName) + ")";
+				return "str(" + convertName(paramName) + ")";
 			} else if (typeName == 'short' || typeName == 'java.lang.Short') {
-				return "util.convert_short_to_java(" + convertName(paramName) + ")";
+				return "int(" + convertName(paramName) + ")";
 			} else if (typeName == 'float' || typeName == 'java.lang.Float') {
-				return "util.convert_float_to_java(" + convertName(paramName) + ")";
+				return "float(" + convertName(paramName) + ")";
 			} else if (typeName == 'double' || typeName == 'java.lang.Double') {
-				return "util.convert_double_to_java(" + convertName(paramName) + ")";
+				return "float(" + convertName(paramName) + ")";
 			} else if (typeName == 'boolean' || typeName == 'java.lang.Boolean') {
-				return "util.convert_boolean_to_java(" + convertName(paramName) + ")";
+				return "bool(" + convertName(paramName) + ")";
 			} else {
 				return convertName(paramName);
 			}
         } else if (kind == CLASS_LIST) {
 			var element = type.args[0];
 			var elementName = element.name;
-			if (elementName == 'byte' || elementName == 'java.lang.Byte') {
-				return "util.jvm.io.vertx.lang.python.TypeHelper.toByteList(" +
-					   "util.python_list_to_java([" + convParam("i", element) +
-                       " for i in " + paramName + "] if " + paramName + 
-                       " is not None else None))";
-			} else if (elementName == 'short' || elementName == 'java.lang.Short') {
-				return "util.jvm.io.vertx.lang.python.TypeHelper.toShortList(" + 
-                       "util.python_list_to_java([" + convParam("i", element) +
-					    " for i in " + paramName + "] if " + paramName + 
-                        " is not None else None))";
-			} else {
-				return "util.python_list_to_java([" + convParam("i", element)  +
-					   " for i in " + paramName + "] if " + paramName + 
+			return "[" + convParam("i", element)  +
+				   " for i in " + paramName + "] if " + paramName +
                        " is not None else None)";
-			}
         } else if (kind == CLASS_SET) {
 			var element = type.args[0];
 			var elementName = element.name;
-			if (elementName == 'byte' || elementName == 'java.lang.Byte') {
-				return "util.jvm.io.vertx.lang.python.TypeHelper.toByteSet(" +
-					   "util.python_set_to_java([" + convParam("i", element) +
-                       " for i in " + paramName + "] if " + paramName + 
-                       " is not None else None))";
-			} else if (elementName == 'short' || elementName == 'java.lang.Short') {
-				return "util.jvm.io.vertx.lang.python.TypeHelper.toShortSet(" + 
-                       "util.python_set_to_java([" + convParam("i", element) +
-					    " for i in " + paramName + "] if " + paramName + 
-                        " is not None else None))";
-			} else {
-				return "util.python_set_to_java([" + convParam("i", element)  +
-					   " for i in " + paramName + "] if " + paramName + 
+			return "set([" + convParam("i", element)  +
+				   " for i in " + paramName + "] if " + paramName +
                        " is not None else None)";
-			}
 		} else if (kind == CLASS_OBJECT) {
-			return "util.python_to_java(" + paramName + ")";
+			return paramName;
 		} else if (kind == CLASS_MAP) {
 		    var keyType = type.args[0];
             var valueType = type.args[1];
 			var elementName = valueType.name;
-			if (elementName == 'byte' || elementName == 'java.lang.Byte') {
-				return "util.jvm.io.vertx.lang.python.TypeHelper.toByteMap(" + 
-                       "util.python_map_to_java({" + convParam("k", keyType) + 
-					   ":" + convParam("v", valueType) + 
-                       " for k,v in iteritems(" + paramName + ")}))";
-			} else if (elementName == 'short' || elementName == 'java.lang.Short') {
-				return "util.jvm.io.vertx.lang.python.TypeHelper.toShortMap(" + 
-                       "util.python_map_to_java({" + convParam("k", keyType) + 
-					   ":" + convParam("v", valueType) + 
-                       " for k,v in iteritems(" + paramName + ")}))";
-			} else {
-				return "util.python_map_to_java({" + convParam("k", keyType) + 
-					   ":" + convParam("v", valueType) + 
-                       " for k,v in iteritems(" + paramName + ")})";
-			}
+			return "{" + convParam("k", keyType) +
+				   ":" + convParam("v", valueType) +
+                       " for k,v in iteritems(" + paramName + ")}";
 		} else if (kind == CLASS_ENUM) {
-			return "util.jvm." + type.name + ".valueOf(" + paramName + ")";
+			return type.name + ".valueOf(" + paramName + ")";
 		} else if (kind.basic || typeName.equals("java.lang.Void")) {
 			return paramName;
 		} else {
@@ -253,7 +210,7 @@
 	}
 }
 
-@comment{"Generate a Python condition"}
+@comment{"Generate a Jython condition"}
 @comment{"==========================="}
 
 @declare{'genCondition'}
@@ -314,7 +271,7 @@
 	@end{" and "}
 @end{}
 
-@comment{"Generate a Python Method"}
+@comment{"Generate a Jython Method"}
 @comment{"========================"}
 
 @declare{'genMethod'}
@@ -439,7 +396,7 @@
 		@end{}
 
 		@if{childMethods.isEmpty()}
-			@comment{"Import the Python return type inside of the method if its not "}
+			@comment{"Import the Jython return type inside of the method if its not "}
 			@comment{"already imported. Needed to avoid circular imports."}
 			@if{baseMethod.returnType.kind == CLASS_API && 
                !imported.contains(baseMethod.returnType.raw.simpleName) && 
@@ -448,7 +405,7 @@
 				@code{refedType = retType.raw.name}
 				@code{refedPackage = refedType.substring(refedType.lastIndexOf('.', refedType.lastIndexOf('.') - 1) + 1, 
                                                          refedType.lastIndexOf('.'))}
-				@{ind}    from @{retType.moduleName}_python.@{refedPackage}.@{convertName(retType.simpleName)} import @{retType.simpleName}\n
+				@{ind}    from @{retType.moduleName}_jython.@{refedPackage}.@{convertName(retType.simpleName)} import @{retType.simpleName}\n
 				@code{imported.add(retType.simpleName)}
 			@end{}
 			@if{requiresTypeCheck([baseMethod])}
@@ -556,63 +513,10 @@
 	@end{}
 @end{}
 
-@comment{"Generate a Vert.x handler"}
-@comment{"========================="}
-
-@code{handlers = []}
-@declare{'genHandlers'}
-	@code{methodList = methodsByName.get(methodName);  method = methodList.get(0);}
-	@foreach{method: methodList}
-		@foreach{param: method.params}
-			@if{param.type.kind == CLASS_HANDLER && !handlers.contains(param.type.name)}
-				@if{param.type.kind == CLASS_HANDLER}
-					@code{element = param.type.args[0]}
-					@if{element.kind == CLASS_ASYNC_RESULT}
-						@code{className = 'Async' + getHandlerName(element.args[0]) + 'Handler'}
-					@else{}
-						@code{className = getHandlerName(element) + 'Handler'}
-					@end{}
-					@if{!handlers.contains(className)}
-						@code{handlers.add(className)}
-						class @{className}(object):\n
-						    class Java:\n
-						        implements = ['io.vertx.core.Handler']\n
-						    def __init__(self, handler):\n
-						        self.handler = handler\n
-						    def handle(self, result):\n
-						        try:\n
-							@if{param.type.args[0].kind == CLASS_ASYNC_RESULT}
-						            if result.succeeded():\n
-								@if{param.type.args[0].args[0].name.startsWith('java.lang.Void')}
-						                self.handler(None, None)\n
-								@else{}
-						                self.handler(@{convReturn(param.type.args[0].args[0], "result.result()", false)}, None)\n
-								@end{}
-						            else:\n
-						                self.handler(None, util.VertxException(result.cause().getMessage()))\n
-							@else{}
-								@if{param.type.args[0].name.startsWith('java.lang.Void')}
-						            self.handler(None)\n
-								@else{}
-						            self.handler(@{convReturn(param.type.args[0], "result", false)})\n
-								@end{}
-							@end{}
-						        except Exception:\n
-						            import traceback\n
-						            traceback.print_exc()\n
-						            raise\n
-						\n
-					@end{}
-				@end{}
-			@end{}
-		@end{}
-	@end{}
-@end{}
-
 @comment{"This is where the generation starts"}
 @comment{"==================================="}
 
-# Copyright 2014 the original author or authors.\n
+# Copyright 2016 the original author or authors.\n
 #\n
 # Licensed under the Apache License, Version 2.0 (the "License");\n
 # you may not use this file except in compliance with the License.\n
@@ -629,23 +533,19 @@
 @comment{"Import utility functions into all modules"}
 
 from __future__ import unicode_literals, print_function, absolute_import\n
-from vertx_python import util\n
-from vertx_python.compat import long, basestring, iteritems\n
-from vertx_python.futures import Future as _Future\n
+from vertx_jython import util\n
+from vertx_jython.compat import long, basestring\n
+from vertx_jython.futures import Future as _Future\n
 \n
 
 @comment{"Initalize the Vert.x client if necessary"}
-
-util.vertx_init()\n
-\n
-
 
 @code{imported = []}
 @foreach{referencedType : referencedTypes}
 	@if{!imported.contains(referencedType.simpleName)}
 		@code{refedType = referencedType.raw.name}
 		@code{refedPackage = refedType.substring(refedType.lastIndexOf('.', refedType.lastIndexOf('.') - 1) + 1, refedType.lastIndexOf('.'))}
-		from @{referencedType.moduleName}_python.@{refedPackage}.@{convertName(referencedType.simpleName)} import @{referencedType.simpleName}\n
+		from @{referencedType.moduleName}_jython.@{refedPackage}.@{convertName(referencedType.simpleName)} import @{referencedType.simpleName}\n
 		@code{imported.add(referencedType.simpleName)}
 	@end{}
 @end{}
@@ -656,10 +556,14 @@ util.vertx_init()\n
 @code{referencedDoTypes = []}
 @foreach{dataObjectType: referencedDataObjectTypes}
 	@if{!referencedDoTypes.contains(dataObjectType)}
-		@{dataObjectType.simpleName} = util.jvm.@{dataObjectType}\n
+		from @{dataObjectType.packageName} import @{dataObjectType.simpleName}\n
 		@code{referencedDoTypes.add(dataObjectType)}
 	@end{}
 @end{}
+\n
+import io.vertx.core.json.JsonObject\n
+import io.vertx.core.json.JsonArray\n
+import @{ifacePackageName}.@{ifaceSimpleName}\n
 \n
 @code{ifaceName = helper.decapitaliseFirstLetter(ifaceSimpleName)}
 
@@ -697,9 +601,3 @@ class @{ifaceSimpleName}(@foreach{superType: superTypes}@{superType.raw.simpleNa
 	@comment{"Call out to generate the static method"}
 	@includeNamed{'genMethod';static=true;ind="    "}
 @end{}
-
-@comment{"Iterate through methods again and create result handler classes"}
-@foreach{methodName:methodsByName.keySet()}
-	@includeNamed{'genHandlers'}
-@end{}
-
