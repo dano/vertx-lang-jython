@@ -395,19 +395,17 @@
 			@{ind}        _method = @{convertName(asyncResultParam.name)}\n
 		@end{}
 
+		@comment{"Import the Jython return type inside of the method if its not "}
+		@comment{"already imported. Needed to avoid circular imports."}
+		@if{baseMethod.returnType.kind == CLASS_API &&
+			!imported.contains(baseMethod.returnType.raw.simpleName) &&
+			baseMethod.returnType.raw.simpleName != ifaceSimpleName}
+			@code{refedPackage = baseMethod.returnType.raw.packageName}
+			@code{lastPackage = refedPackage.substring(refedPackage.lastIndexOf('.') + 1)}
+			@code{refedType = baseMethod.returnType.raw.simpleName}
+			@{ind}    from vertx_jython.@{lastPackage}.@{convertName(refedType)} import @{refedType}\n
+		@end{}
 		@if{childMethods.isEmpty()}
-			@comment{"Import the Jython return type inside of the method if its not "}
-			@comment{"already imported. Needed to avoid circular imports."}
-			@if{baseMethod.returnType.kind == CLASS_API && 
-               !imported.contains(baseMethod.returnType.raw.simpleName) && 
-               baseMethod.returnType.raw.simpleName != ifaceSimpleName}
-				@code{retType = baseMethod.returnType}
-				@code{refedType = retType.raw.name}
-				@code{refedPackage = refedType.substring(refedType.lastIndexOf('.', refedType.lastIndexOf('.') - 1) + 1, 
-                                                         refedType.lastIndexOf('.'))}
-				@{ind}    from @{retType.moduleName}_jython.@{refedPackage}.@{convertName(retType.simpleName)} import @{retType.simpleName}\n
-				@code{imported.add(retType.simpleName)}
-			@end{}
 			@if{requiresTypeCheck([baseMethod])}
 				@{ind}    if @includeNamed{'genCondition';method=baseMethod;}:\n
 				@if{baseMethod.fluent}
@@ -423,7 +421,7 @@
 						@{ind}            return out\n
 					@else{}	
 						@{ind}        return @{convReturn(baseMethod.returnType, 
-                                                          genMethodCall(baseMethod), false)}\n
+													    genMethodCall(baseMethod), false)}\n
 					@end{}
 				@end{}
 				@{ind}    else:\n
@@ -541,14 +539,16 @@ from vertx_jython.futures import Future as _Future\n
 @comment{"Initalize the Vert.x client if necessary"}
 
 @code{imported = []}
-@foreach{referencedType : referencedTypes}
+@foreach{referencedType : superTypes}
 	@if{!imported.contains(referencedType.simpleName)}
-		@code{refedType = referencedType.raw.name}
-		@code{refedPackage = refedType.substring(refedType.lastIndexOf('.', refedType.lastIndexOf('.') - 1) + 1, refedType.lastIndexOf('.'))}
-		from @{referencedType.moduleName}_jython.@{refedPackage}.@{convertName(referencedType.simpleName)} import @{referencedType.simpleName}\n
+		@code{refedPackage = referencedType.raw.packageName}
+		@code{lastPackage = refedPackage.substring(refedPackage.lastIndexOf('.') + 1)}
+		@code{refedType = referencedType.raw.simpleName}
+		from vertx_jython.@{lastPackage}.@{convertName(refedType)} import @{refedType}\n
 		@code{imported.add(referencedType.simpleName)}
 	@end{}
 @end{}
+
 \n
 
 @comment{"The top level vars for the module"}
