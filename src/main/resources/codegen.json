@@ -1,0 +1,20 @@
+{
+  "name": "Jython",
+  "generators": [
+    {
+      "kind": "class",
+      "fileName": "'resources/' + type.raw.moduleName + '_jython/' + fqn.substring(fqn.lastIndexOf('.', fqn.lastIndexOf('.') - 1) + 1, fqn.lastIndexOf('.')) + '/' + helper.convertCamelCaseToUnderscores(type.raw.simpleName) + '.py'",
+      "templateFileName": "vertx_jython/template/jython.templ"
+    },
+    {
+      "kind": "module",
+      "fileName": "'resources/' + name + '_jython/__init__.py'",
+      "templateFileName": "vertx_jython/template/init.templ"
+    },
+    {
+      "kind" : "package",
+      "fileName" : "'resources/' +  module.name + '_jython/' + fqn.substring(fqn.lastIndexOf('.') + 1, fqn.length()) + '/__init__.py'",
+      "templateFileName": "vertx_jython/template/init2.templ"
+    }
+  ]
+}
