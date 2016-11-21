@@ -15,6 +15,14 @@ def make_handler(fut):
             fut.set_exception(result.cause())
     return handler_wrapper
 
+def cb_wrapper(handler, converter):
+    def cb(result):
+        if result.succeeded():
+            handler(converter(result.result()), None)
+        else:
+            handler(None, result.cause())
+    return cb
+
 def handle_none(obj, type_):
     return type_(obj) if obj is not None else obj
 

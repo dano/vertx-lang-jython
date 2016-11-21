@@ -85,11 +85,11 @@
 			}
 			return settype + "([" + convReturn(elementType, "elt", true) + " for elt in " + expr + "])";
 		} else if (kind == CLASS_JSON_OBJECT) {
-			return expr;
+			return "json.loads(" + expr + ".encode())";
 		} else if (kind == CLASS_JSON_ARRAY) {
-			return expr;
+			return "ast.literal_eval(" + expr + ".encode())";
 		} else if (kind == CLASS_DATA_OBJECT) {
-		    return "dict(" + expr + ".toJson())";
+		    return "json.loads(" + expr + ".toJson().encode())";
 		} else if (kind == CLASS_MAP) {
 			return "dict(" + expr + ")";
 		} else if (kind == CLASS_API) {
@@ -130,7 +130,15 @@
 		var kind = type.kind;
 		var typeName = type.name;
 		if (kind == CLASS_HANDLER) {
-			return convertName(paramName);
+			if (type.args[0].kind == CLASS_ASYNC_RESULT) {
+			    var resultType = type.args[0].args[0];
+			    var resultKind = resultType.kind;
+			    return "util.cb_wrapper(" + convertName(paramName) + ", lambda x: " + convReturn(resultType, "x", false) + ")"
+			} else {
+			    var resultType = type.args[0];
+			    var resultKind = resultType.kind;
+			    return "lambda x: " + convertName(paramName) + "(" + convReturn(resultType, "x", false) + ")";
+			}
 		} else if (kind == CLASS_JSON_OBJECT) {
 			return "io.vertx.core.json.JsonObject(" + convertName(paramName) + ")";
         } else if (kind == CLASS_JSON_ARRAY) {
@@ -505,9 +513,10 @@
 from vertx_jython import util\n
 from vertx_jython.compat import long, basestring\n
 from vertx_jython.futures import Future as _Future\n
-\n
+import json\n
+import ast
 
-@comment{"Initalize the Vert.x client if necessary"}
+\n
 
 @code{imported = []}
 @foreach{referencedType : superTypes}
@@ -528,6 +537,15 @@ from vertx_jython.futures import Future as _Future\n
 	@if{!referencedDoTypes.contains(dataObjectType)}
 		from @{dataObjectType.packageName} import @{dataObjectType.simpleName}\n
 		@code{referencedDoTypes.add(dataObjectType)}
+	@end{}
+@end{}
+@foreach{referencedType: referencedTypes}
+	@if{!imported.contains(referencedType.simpleName)}
+		@code{refedPackage = referencedType.raw.packageName}
+		@code{lastPackage = refedPackage.substring(refedPackage.lastIndexOf('.') + 1)}
+		@code{refedType = referencedType.raw.simpleName}
+		from @{referencedType.raw.moduleName}_jython.@{lastPackage}.@{convertName(refedType)} import @{refedType}\n
+		@code{imported.add(referencedType.simpleName)}
 	@end{}
 @end{}
 \n

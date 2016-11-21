@@ -1053,6 +1053,7 @@ class TestAPI(unittest.TestCase):
     def testComplexJsonHandlerParams(self):
         dct = dict(count=0)
         def obj_handler(val):
+            print(type(val))
             self.assertEqual(val, {'outer' : {'socks' : 'tartan'},
                                    'list' : ['yellow', 'blue']})
             dct['count'] += 1
@@ -1125,15 +1126,15 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(ret, 65675123)
         ret = obj.method_with_float_return()
         self.assertEqual(type(ret), float)
-        self.assertEqual(ret, 1.23)
+        self.assertAlmostEquals(ret, 1.23)
         ret = obj.method_with_double_return()
         self.assertEqual(type(ret), float)
-        self.assertEqual(ret, 3.34535)
+        self.assertAlmostEqual(ret, 3.34535)
         ret = obj.method_with_boolean_return()
         self.assertEqual(type(ret), bool)
         self.assertEqual(ret, True)
         ret = obj.method_with_char_return()
-        self.assertEqual(type(ret), unicode)
+        self.assertEqual(type(ret), str)
         self.assertEqual(ret, 'Y')
         ret = obj.method_with_string_return()
         self.assertEqual(type(ret), unicode)
@@ -1578,7 +1579,7 @@ class TestAPI(unittest.TestCase):
         test_interface = my.method()
         test_interface.method_with_basic_params(123, 12345, 1234567, 
                                                 1265615234, 12.345, 12.34566, 
-                                                True, 'X', 'foobar')
+                                                True, 88, 'foobar')
         sub = my.sub()
         ret = sub.reverse("hello")
         self.assertEqual(ret, "olleh")
@@ -1638,3 +1639,5 @@ class TestAPI(unittest.TestCase):
         ret = obj.method_with_enum_param('sausages', "TIM")
         self.assertEqual(ret, 'sausagesTIM')
 
+# if __name__ == "__main__":
+#     unittest.main()
