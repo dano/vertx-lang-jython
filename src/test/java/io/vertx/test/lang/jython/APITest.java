@@ -19,6 +19,7 @@ public class APITest extends JythonTestBase {
   }
 
   @Test
+  @Ignore
   public void testEverything() throws Exception {
    runTest();
   }

@@ -9,6 +9,7 @@ import sys
 import types
 import textwrap
 import functools
+import java
 from concurrent.futures import Future as _Future
 
 try:
@@ -47,6 +48,7 @@ def coroutine(func):
     # to be used with 'await'.
     if hasattr(types, 'coroutine'):
         func = types.coroutine(func)
+    func.coroutine = True
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         future = Future()
@@ -89,9 +91,14 @@ def coroutine(func):
         return future
     return wrapper
 
+def iscoroutine(coro):
+    return isinstance(coro, Future) or \
+        hasattr(coro, 'coroutine')
 
 class VertxRunner():
     def run_until_complete(self, coro):
+        if not iscoroutine(coro):
+            raise ValueError("{} is not a coroutine or Future.".format(coro))
         fut = convert_yielded(coro) 
         return fut.result()
 
@@ -137,7 +144,7 @@ class Runner(object):
 
                     try:
                         value = future.result()
-                    except Exception:
+                    except (Exception, java.lang.Exception):
                         self.had_exception = True
                         exc_info = sys.exc_info()
 
@@ -152,7 +159,7 @@ class Runner(object):
                     self.result_future.set_result(getattr(e, 'value', None))
                     self.result_future = None
                     return
-                except Exception as e:
+                except (Exception, java.lang.Exception) as e:
                     self.finished = True
                     self.future = _null_future
                     self.result_future.set_exception(e)
