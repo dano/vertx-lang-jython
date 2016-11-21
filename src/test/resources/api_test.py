@@ -48,7 +48,7 @@ class TestAPI(unittest.TestCase):
             dct['count'] += 1
         def float_handler(f):
             self.assertEqual(type(f), float)
-            self.assertEqual(12.345, f)
+            self.assertAlmostEqual(12.345, f)
             dct['count'] += 1
         def double_handler(d):
             self.assertEqual(type(d), float)
@@ -98,12 +98,12 @@ class TestAPI(unittest.TestCase):
             dct['count'] += 1
         def float_handler(f, err):
             self.assertEqual(type(f), float)
-            self.assertEqual(12.345, f)
+            self.assertAlmostEqual(12.345, f)
             self.assertIsNone(err)
             dct['count'] += 1
         def double_handler(d, err):
             self.assertEqual(type(d), float)
-            self.assertEqual(12.34566, d)
+            self.assertAlmostEqual(12.34566, d)
             self.assertIsNone(err)
             dct['count'] += 1
         def boolean_handler(b, err):
@@ -136,9 +136,9 @@ class TestAPI(unittest.TestCase):
     def testMethodWithHandlerAsyncResultBasicTypesFails(self):
         dct = dict(count=0)
         def handler(x, err):
-            self.assertIsNone(x);
-            self.assertIsNotNone(err);
-            self.assertEqual("foobar!", str(err));
+            self.assertIsNone(x)
+            self.assertIsNotNone(err)
+            self.assertEqual("foobar!", str(err))
             dct['count'] += 1
 
         obj.method_with_handler_async_result_byte(True, handler)
@@ -1349,11 +1349,11 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(type(arr), list)
         self.assertEqual(arr, ['wibble'])
         map['bar'] = ['spidey']
-        self.assertEqual(map, {'foo' : ['wibble'],'bar' : ['spidey']})
+        self.assertEqual(map, {'foo': ['wibble'],'bar': ['spidey']})
         def test():
             map['juu'] = 123
-        self.assertRaises(Py4JJavaError, test)
-        self.assertEqual(map, {'foo' : ['wibble'],'bar' : ['spidey']})
+        self.assertRaises(Exception, test)
+        self.assertEqual(map, {'foo': ['wibble'],'bar': ['spidey']})
 
 
     def testMapLongReturn(self):
