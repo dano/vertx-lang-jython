@@ -1365,7 +1365,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(map, {'foo' : 123,'bar' : 321})
         def test():
             map['juu'] = 'something'
-        self.assertRaises(Py4JJavaError, test)
+        self.assertRaises(Exception, test)
         self.assertEqual(map, {'foo' : 123,'bar' : 321})
 
 
@@ -1378,7 +1378,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(map, {'foo' : 123,'bar' : 321})
         def test():
             map['juu'] = 'something'
-        self.assertRaises(Py4JJavaError, test)
+        self.assertRaises(Exception, test)
         self.assertEqual(map, {'foo' : 123,'bar' : 321})
 
 
@@ -1391,7 +1391,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(map, {'foo' : 123,'bar' : 321})
         def test():
             map['juu'] = 'something'
-        self.assertRaises(Py4JJavaError, test)
+        self.assertRaises(Exception, test)
         self.assertEqual(map, {'foo' : 123,'bar' : 321})
 
 
@@ -1404,7 +1404,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(map, {'foo' : 123,'bar' : 12})
         def test():
             map['juu'] = 'something'
-        self.assertRaises(Py4JJavaError, test)
+        self.assertRaises(Exception, test)
         self.assertEqual(map, {'foo' : 123,'bar' : 12})
 
 
@@ -1444,7 +1444,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(sorted(map.keys()), ['bar', 'foo'])
         def test():
             map['juu'] = 'something'
-        self.assertRaises(Py4JJavaError, test)
+        self.assertRaises(Exception, test)
         self.assertEqual(map['foo'], 0.123)
         self.assertEqual(map['bar'], 0.321)
         self.assertEqual(sorted(map.keys()), ['bar', 'foo'])
@@ -1459,7 +1459,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(map, {'foo' : 0.123,'bar' : 0.321})
         def test():
             map['juu'] = 'something'
-        self.assertRaises(Py4JJavaError, test)
+        self.assertRaises(Exception, test)
         self.assertEqual(map, {'foo' : 0.123,'bar' : 0.321})
 
 
