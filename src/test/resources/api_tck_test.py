@@ -2,6 +2,7 @@ import unittest
 
 from io.vertx.codegen.testmodel import RefedInterface1Impl
 from io.vertx.codegen.testmodel import TestInterfaceImpl
+import org.junit.ComparisonFailure
 
 from acme_jython.pkg.my_interface import MyInterface
 from testmodel_jython.testmodel.factory import Factory
@@ -49,7 +50,7 @@ class TestTCKAPI(unittest.TestCase):
 
         def float_handler(f):
             self.assertEqual(type(f), float)
-            self.assertAlmostEqual(12.345, f)
+            self.assertAlmostEqual(12.345, f, places=3)
             dct['count'] += 1
 
         def double_handler(d):
@@ -63,7 +64,7 @@ class TestTCKAPI(unittest.TestCase):
             dct['count'] += 1
 
         def char_handler(c):
-            self.assertEqual(type(c), unicode)
+            self.assertEqual(type(c), str)
             self.assertEqual('X', c)
             dct['count'] += 1
 
@@ -108,7 +109,7 @@ class TestTCKAPI(unittest.TestCase):
 
         def float_handler(f, err):
             self.assertEqual(type(f), float)
-            self.assertAlmostEqual(12.345, f)
+            self.assertAlmostEqual(12.345, f, places=3)
             self.assertIsNone(err)
             dct['count'] += 1
 
@@ -125,7 +126,7 @@ class TestTCKAPI(unittest.TestCase):
             dct['count'] += 1
 
         def char_handler(c, err):
-            self.assertEqual(type(c), unicode)
+            self.assertEqual(type(c), str)
             self.assertEqual('X', c)
             self.assertIsNone(err)
             dct['count'] += 1
@@ -193,18 +194,18 @@ class TestTCKAPI(unittest.TestCase):
         def handler(option, err):
             self.assertIsNone(option)
             self.assertIsNotNone(err)
-            self.assertEqual("foobar!", str(err))
+            self.assertEqual("foobar!", str(err.getMessage()))
             dct['count'] += 1
         obj.method_with_handler_async_result_data_object(True, handler)
         self.assertEqual(dct['count'], 1)
 
     def testMethodWithHandlerStringReturn(self):
         handler = obj.method_with_handler_string_return("the-result")
-        handler.call("the-result")
+        handler.handle("the-result")
         failed = False
         try:
-            handler.call("the-result")
-        except Exception:
+            handler.handle("unexpected")
+        except org.junit.ComparisonFailure:
             failed = True
         self.assertEqual(True, failed)
 
@@ -213,61 +214,61 @@ class TestTCKAPI(unittest.TestCase):
         def h(val):
             d['result'] = val
         handler = obj.method_with_handler_generic_return(h)
-        handler.call("the-result")
+        handler.handle("the-result")
         self.assertEqual(d['result'], "the-result")
-        handler.call(obj)
+        handler.handle(obj)
         self.assertEqual(d['result'], obj)
 
     def testMethodWithHandlerVertxGenReturn(self):
         handler = obj.method_with_handler_vertx_gen_return("the-result")
         refed_obj.set_string('the-result')
-        handler.call(refed_obj)
+        handler.handle(refed_obj)
 
     def testMethodWithHandlerAsyncResultStringReturn(self):
         succeeding_handler = obj.method_with_handler_async_result_string_return("the-result", False)
-        succeeding_handler.call(None, "the-result")
+        succeeding_handler.handle(None, "the-result")
         failed = False
         try:
-            succeeding_handler.call(None)
-        except Exception:
+            succeeding_handler.handle(None)
+        except org.junit.ComparisonFailure:
             failed = True
         self.assertEqual(failed, True)
         failing_handler = obj.method_with_handler_async_result_string_return("an-error", True)
-        failing_handler.call("an-error")
+        failing_handler.handle("an-error")
         failed = False
         try:
-            failing_handler.call(None, "unexpected")
-        except Exception:
+            failing_handler.handle(None, "unexpected")
+        except org.junit.ComparisonFailure:
             failed = True
         self.assertEquals(failed, True)
 
     def testMethodWithHandlerAsyncResultGenericReturn(self):
         dct = {"result": None}
-        def h(err, val):
+        def h(val, err):
             if err is None:
                 dct['result'] = val
             else:
                 dct['result'] = err
 
         succeeding_handler = obj.method_with_handler_async_result_generic_return(h)
-        succeeding_handler.call(None, "the-result")
+        succeeding_handler.handle(None, "the-result")
         self.assertEquals(dct['result'], "the-result")
-        succeeding_handler.call(None, obj)
+        succeeding_handler.handle(None, obj)
         self.assertEquals(dct['result'], obj)
 
     def testMethodWithHandlerAsyncResultVertxGenReturn(self):
         handler = obj.method_with_handler_async_result_vertx_gen_return("the-async-result", False)
         refed_obj.set_string('the-async-result')
-        handler.call(None, refed_obj)
+        handler.handle(None, refed_obj)
         handler = obj.method_with_handler_async_result_vertx_gen_return("the-async-failure", True)
-        handler.call("the-async-failure", None)
+        handler.handle("the-async-failure", None)
 
     def testMethodWithHandlerUserTypes(self):
         dct = {'count': 0}
 
         def h(val):
             self.assertEquals(type(val), RefedInterface1)
-            self.assertEquals(val.get_string, 'echidnas')
+            self.assertEquals(val.get_string(), 'echidnas')
             dct['count'] += 1
 
         obj.method_with_handler_user_types(h)
@@ -276,10 +277,10 @@ class TestTCKAPI(unittest.TestCase):
     def testMethodWithHandlerAsyncResultUserTypes(self):
         dct = {'count': 0}
 
-        def h(err, val):
+        def h(val, err):
             self.assertIsNone(err)
             self.assertEquals(type(val), RefedInterface1)
-            self.assertEquals(val.get_string, 'cheetahs')
+            self.assertEquals(val.get_string(), 'cheetahs')
             dct['count'] += 1
 
         obj.method_with_handler_async_result_user_types(h)
@@ -290,7 +291,7 @@ class TestTCKAPI(unittest.TestCase):
 
         def h(refed_obj):
             self.assertEquals(type(refed_obj), RefedInterface1)
-            self.assertEquals(refed_obj.get_string, 'echidnas')
+            self.assertEquals(refed_obj.get_string(), 'echidnas')
             dct['count'] += 1
 
         arg = Factory.create_concrete_handler_user_type(h)
@@ -302,7 +303,7 @@ class TestTCKAPI(unittest.TestCase):
 
         def h(refed_obj):
             self.assertEquals(type(refed_obj), RefedInterface1)
-            self.assertEquals(refed_obj.get_string, 'echidnas')
+            self.assertEquals(refed_obj.get_string(), 'echidnas')
             dct['count'] += 1
 
         arg = Factory.create_abstract_handler_user_type(h)
@@ -314,7 +315,7 @@ class TestTCKAPI(unittest.TestCase):
 
         def h(refed_obj):
             self.assertEquals(type(refed_obj), RefedInterface1)
-            self.assertEquals(refed_obj.get_string, 'echidnas')
+            self.assertEquals(refed_obj.get_string(), 'echidnas')
             dct['count'] += 1
 
         arg = Factory.create_concrete_handler_user_type_extension(h)
@@ -395,12 +396,12 @@ class TestTCKAPI(unittest.TestCase):
             self.assertEqual(dct['count'], 1)
 
         run_test('string_value', lambda x: self.assertEqual(x, 'string_value'))
-        run_test({'key' : 'key_value'}, lambda x: self.assertEqual(x, {'key' : 'key_value'}))
+        run_test({'key' : 'key_value'}, lambda x: self.assertEqual(x, {'key': 'key_value'}))
         run_test(['foo', 'bar', 'juu'], lambda x: self.assertEqual(x, ['foo', 'bar', 'juu']))
 
     def testMethodWithGenericParam(self):
         obj.method_with_generic_param('String', 'foo')
-        obj.method_with_generic_param('JsonObject', {'foo' : 'hello','bar' : 123})
+        obj.method_with_generic_param('JsonObject', {'foo': 'hello', 'bar': 123})
         obj.method_with_generic_param('JsonArray', ['foo', 'bar', 'wib'])
 
     def testMethodWithGenericHandler(self):
@@ -632,9 +633,9 @@ class TestTCKAPI(unittest.TestCase):
         self.assertEquals(ret, ret2)
         ret3 = obj.method_with_cached_list_return()
         self.assertEquals(ret, ret3)
-        self.assertEquals(ret.size, 2)
-        self.assertEquals(ret[0].get_string, 'foo')
-        self.assertEquals(ret[1].get_string, 'bar')
+        self.assertEquals(len(ret), 2)
+        self.assertEquals(ret[0].get_string(), 'foo')
+        self.assertEquals(ret[1].get_string(), 'bar')
 
     def testJsonReturns(self):
         ret = obj.method_with_json_object_return()
@@ -732,7 +733,7 @@ class TestTCKAPI(unittest.TestCase):
             self.assertEquals(ret, '(RuntimeError) the_throwable')
 
     def testSuperMethodOverloadedBySubclass(self):
-        self.assertEquals(0, obj.super_method_overloaded_by_subclass)
+        self.assertEquals(0, obj.super_method_overloaded_by_subclass())
         self.assertEquals(1, obj.super_method_overloaded_by_subclass('one_arg'))
 
     def testEnumReturn(self):
