@@ -1,12 +1,13 @@
 import unittest
 
-import io.vertx.codegen.testmodel.FunctionParamTCKImpl
+from io.vertx.codegen.testmodel import FunctionParamTCKImpl
+from io.vertx.codegen.testmodel import RefedInterface1Impl
 
 from testmodel_jython.testmodel.function_param_tck import FunctionParamTCK
 from testmodel_jython.testmodel.refed_interface1 import RefedInterface1
 
-obj = FunctionParamTCK(io.vertx.codegen.testmodel.FunctionParamTCKImpl())
-refed_obj = RefedInterface1(io.vertx.codegen.testmodel.RefedInterface1Impl())
+obj = FunctionParamTCK(FunctionParamTCKImpl())
+refed_obj = RefedInterface1(RefedInterface1Impl())
 
 class TestAPI(unittest.TestCase):
 

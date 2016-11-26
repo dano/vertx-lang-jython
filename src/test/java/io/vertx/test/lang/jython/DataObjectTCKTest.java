@@ -12,6 +12,11 @@ public class DataObjectTCKTest extends JythonTestBase {
     return "data_object_tck_test.py";
   }
 
+  @Override
+  protected String getTestClass() {
+    return "TestAPI";
+  }
+
   @Test
   public void testMethodWithOnlyJsonObjectConstructorDataObject() {
     runTest();

@@ -12,6 +12,11 @@ public class GenericsTCKTest extends JythonTestBase {
     return "generics_tck_test.py";
   }
 
+  @Override
+  protected String getTestClass() {
+    return "TestAPI";
+  }
+
   @Test
   public void testMethodWithBasicParameterizedReturn() throws Exception {
     runTest();

@@ -137,6 +137,7 @@ public class DeployTest extends VertxTestBase {
   public void testVerticleRaisingErrorInAsyncStart() {
     vertx.deployVerticle("verticle_raising_error_in_async_start.py", ar -> {
       assertFalse(ar.succeeded());
+      ar.cause().printStackTrace();
       assertEquals(1, deployedCount);
       assertEquals(1, startedCount);
       assertEquals(0, stoppedCount);

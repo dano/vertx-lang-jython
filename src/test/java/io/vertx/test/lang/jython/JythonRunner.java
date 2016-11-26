@@ -9,6 +9,10 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxException;
 
@@ -24,8 +28,26 @@ public class JythonRunner {
     return Vertx.vertx();
   }
 
-  public int run(String scriptName, String testName) throws Exception {
-    return run(scriptName, testName, true, true);
+  public void run(String scriptName, String className, String testName) throws Exception {
+    try {
+      ScriptEngineManager manager = new ScriptEngineManager();
+      ScriptEngine engine = manager.getEngineByName("python");
+      if (engine == null) {
+        throw new RuntimeException("Couldn't find the engine");
+      }
+      String moduleName = getModuleName(scriptName);
+      engine.eval("import " + moduleName);
+      if (className != null) {
+        engine.eval(moduleName + "." + className + "('" + testName + "').debug()");
+      } else {
+        engine.eval(moduleName + "." + testName + "()");
+      }
+    } catch (ScriptException e) {
+      throw new AssertionError(e.getCause());
+    }
+  }
+  private String getModuleName(String scriptName) {
+    return scriptName.substring(0, scriptName.length() -3);
   }
 
   public int run(String scriptName, String testName, boolean provideRequire, 
@@ -54,7 +76,7 @@ public class JythonRunner {
       // We have to convert it back to an inputstream since for some reason there is no version
       // py.exec which takes a String AND a fileName - and without the filename
       // any stack traces from errors won't show the filename and be hard for the user to parse.
-//      System.out.println(sWrap.toString());
+     System.out.println(sWrap.toString());
       try (InputStream sis = new ByteArrayInputStream(sWrap.toString().getBytes("UTF-8"))) {
         py.execfile(sis, scriptName);
       }

@@ -56,4 +56,9 @@ public class LangTest extends JythonTestBase {
     return "lang_test.py";
   }
 
+  @Override
+  protected String getTestClass() {
+    return null;
+  }
+
 }

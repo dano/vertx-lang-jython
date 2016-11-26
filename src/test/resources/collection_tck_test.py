@@ -1,13 +1,13 @@
 import unittest
 
-import io.vertx.codegen.testmodel.RefedInterface1Impl
+from io.vertx.codegen.testmodel import CollectionTCKImpl
 import re
 
 from testmodel_jython.testmodel.collection_tck import CollectionTCK
 from testmodel_jython.testmodel.refed_interface1 import RefedInterface1
 from testmodel_jython.testmodel.refed_interface2 import RefedInterface2
 
-obj = CollectionTCK(io.vertx.codegen.testmodel.CollectionTCKImpl())
+obj = CollectionTCK(CollectionTCKImpl())
 
 class CollectionTCKTest(unittest.TestCase):
 

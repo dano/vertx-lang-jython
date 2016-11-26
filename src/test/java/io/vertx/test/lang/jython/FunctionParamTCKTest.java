@@ -14,6 +14,11 @@ public class FunctionParamTCKTest extends JythonTestBase {
     return "function_param_tck_test.py";
   }
 
+  @Override
+  protected String getTestClass() {
+    return "TestAPI";
+  }
+
   @Rule
   public final TestName testName = new TestName();
 

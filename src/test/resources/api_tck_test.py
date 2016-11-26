@@ -1,6 +1,7 @@
 import unittest
 
-import io.vertx.codegen.testmodel.RefedInterface1Impl
+from io.vertx.codegen.testmodel import RefedInterface1Impl
+from io.vertx.codegen.testmodel import TestInterfaceImpl
 
 from acme_jython.pkg.my_interface import MyInterface
 from testmodel_jython.testmodel.factory import Factory
@@ -11,9 +12,8 @@ from testmodel_jython.testmodel.super_interface1 import SuperInterface1
 from testmodel_jython.testmodel.super_interface2 import SuperInterface2
 from testmodel_jython.testmodel.test_interface import TestInterface
 
-obj = TestInterface(io.vertx.codegen.testmodel.TestInterfaceImpl())
-refed_obj = RefedInterface1(io.vertx.codegen.testmodel.RefedInterface1Impl())
-refed_obj2 = RefedInterface1(io.vertx.codegen.testmodel.RefedInterface1Impl())
+obj = TestInterface(TestInterfaceImpl())
+refed_obj = RefedInterface1(RefedInterface1Impl())
 
 
 class TestTCKAPI(unittest.TestCase):
@@ -557,9 +557,9 @@ class TestTCKAPI(unittest.TestCase):
         ret = obj.method_with_data_object_return()
         self.assertEquals(ret, {'foo': 'foo', 'bar': 123, 'wibble': 0.0})
 
-    def testDataObjectNullReturn(self):
-        ret = obj.method_with_data_object_null_return()
-        self.assertEquals(None, ret)
+    # def testDataObjectNullReturn(self):
+    #     ret = obj.method_with_data_object_null_return()
+    #     self.assertEquals(None, ret)
 
     def testOverloadedMethods(self):
         refed_obj.set_string('dog')

@@ -2,9 +2,9 @@ import unittest
 
 from testmodel_jython.testmodel.data_object_tck import DataObjectTCK
 
-import io.vertx.codegen.testmodel.DataObjectTCKImpl
+from io.vertx.codegen.testmodel import DataObjectTCKImpl
 
-dobj_tck = DataObjectTCK(io.vertx.codegen.testmodel.DataObjectTCKImpl())
+dobj_tck = DataObjectTCK(DataObjectTCKImpl())
 
 
 class TestDataObjTCKAPI(unittest.TestCase):

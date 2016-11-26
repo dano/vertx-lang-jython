@@ -11,10 +11,12 @@ public abstract class JythonTestBase {
 
   protected abstract String getTestFile();
 
+  protected abstract String getTestClass();
+
   protected void runTest(String method) {
     JythonRunner runner = new JythonRunner();
     try {
-      runner.run(getTestFile(), method);
+      runner.run(getTestFile(), getTestClass(), method);
     } catch (Exception e) {
       throw new AssertionError(e);
     }

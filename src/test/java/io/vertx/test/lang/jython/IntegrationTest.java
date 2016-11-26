@@ -12,6 +12,11 @@ public class IntegrationTest extends JythonTestBase {
     return "integration_test.py";
   }
 
+  @Override
+  protected String getTestClass() {
+    return null;
+  }
+
   @Test
   public void testMultiMapNames() {
     runTest("test_multi_map_names");

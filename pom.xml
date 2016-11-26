@@ -36,7 +36,7 @@
     <dependency>
       <groupId>org.python</groupId>
       <artifactId>jython-standalone</artifactId>
-      <version>2.7.0</version>
+      <version>2.7.1b3</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -65,10 +65,11 @@
       <version>2.2.8.Final</version>
       <scope>provided</scope>
     </dependency>
+    <!-- Test dependencies -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-codegen</artifactId>
+      <classifier>tck-sources</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -80,16 +81,21 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-codegen</artifactId>
-      <classifier>tck-sources</classifier>
+      <classifier>sources</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
-      <artifactId>vertx-codegen</artifactId>
-      <classifier>sources</classifier>
+      <artifactId>vertx-core</artifactId>
+      <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 
   <build>

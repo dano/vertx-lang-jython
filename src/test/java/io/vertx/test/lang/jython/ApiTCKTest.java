@@ -12,6 +12,11 @@ public class ApiTCKTest extends JythonTestBase {
     return "api_tck_test.py";
   }
 
+  @Override
+  protected String getTestClass() {
+    return "TestTCKAPI";
+  }
+
   @Test
   public void testMethodWithBasicParams() {
     runTest();

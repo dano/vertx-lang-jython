@@ -12,6 +12,11 @@ public class CollectionTCKTest extends JythonTestBase {
     return "collection_tck_test.py";
   }
 
+  @Override
+  protected String getTestClass() {
+    return "TestAPI";
+  }
+
   @Test
   public void testMethodWithHandlerListAndSet() {
     runTest();
@@ -24,17 +29,17 @@ public class CollectionTCKTest extends JythonTestBase {
 
   @Test
   public void testMethodWithHandlerListVertxGen() {
-    runTest();;
+    runTest();
   }
 
   @Test
   public void testMethodWithHandlerListAbstractVertxGen() {
-    runTest();;
+    runTest();
   }
 
   @Test
   public void testMethodWithHandlerAsyncResultListVertxGen() {
-    runTest();;
+    runTest();
   }
 
   @Test
