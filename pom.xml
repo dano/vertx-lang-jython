@@ -12,18 +12,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>vertx-lang-jython</artifactId>
-  <version>3.3.0-SNAPSHOT</version>
+  <version>3.4.0-SNAPSHOT</version>
 
   <properties>
-    <stack.version>3.3.0-SNAPSHOT</stack.version>
+    <stack.version>3.4.0-SNAPSHOT</stack.version>
     <asciidoc.dir>${project.basedir}/src/main/asciidoc</asciidoc.dir>
     <tools.jar>${java.home}/../lib/tools.jar</tools.jar>
-
-    <netty.version>4.1.0.CR7</netty.version>
-    <log4j.version>1.2.17</log4j.version>
-    <slf4j.version>1.7.21</slf4j.version>
-    <log4j2.version>2.5</log4j2.version>
-    <junit.version>4.12</junit.version>
   </properties>
 
   <dependencyManagement>
@@ -39,17 +33,10 @@
   </dependencyManagement>
 
   <dependencies>
-
     <dependency>
       <groupId>org.python</groupId>
       <artifactId>jython-standalone</artifactId>
       <version>2.7.0</version>
-    </dependency>
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-handler-proxy</artifactId>
-      <version>${netty.version}</version>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -73,30 +60,6 @@
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>${log4j.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>${slf4j.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-api</artifactId>
-      <version>${log4j2.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <version>${log4j2.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.mvel</groupId>
       <artifactId>mvel2</artifactId>
       <version>2.2.8.Final</version>
@@ -105,7 +68,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
+      <version>4.12</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -130,7 +93,6 @@
   </dependencies>
 
   <build>
-
     <pluginManagement>
       <plugins>
         <plugin>
@@ -144,6 +106,9 @@
               <additionalClasspathElement>${project.build.testSourceDirectory}</additionalClasspathElement>
               <additionalClasspathElement>${project.basedir}/src/main/resources</additionalClasspathElement>
             </additionalClasspathElements>
+            <environmentVariables>
+              <NODE_PATH>src/test/npm</NODE_PATH>
+            </environmentVariables>
           </configuration>
         </plugin>
         <plugin>
@@ -163,12 +128,11 @@
         </plugin>
       </plugins>
     </pluginManagement>
-
     <plugins>
       <plugin>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
-          <!-- Unpack Vert.x Core source code to target/vertx-core -->
+          <!-- Unpack vertx-core source code to target/vertx-core -->
           <execution>
             <id>unpack-vertx-core</id>
             <phase>generate-sources</phase>
@@ -180,12 +144,14 @@
               <includeArtifactIds>vertx-core</includeArtifactIds>
               <includeTypes>jar</includeTypes>
               <includeClassifiers>sources</includeClassifiers>
+              <includes>io/vertx/core/**/*.java,examples/**/*.java</includes>
+              <excludes>**/impl/**/*.java,**/logging/**/*.java</excludes>
               <outputDirectory>${project.build.directory}/sources/vertx-core</outputDirectory>
             </configuration>
           </execution>
-          <!-- Unpack Codegen TCK source code to target/sources/codegen -->
+          <!-- Unpack codegen source code to target/sources/codegen -->
           <execution>
-            <id>unpack-codegen-tck</id>
+            <id>unpack-codegen</id>
             <phase>generate-test-sources</phase>
             <goals>
               <goal>unpack-dependencies</goal>
@@ -203,9 +169,9 @@
       <plugin>
         <groupId>org.bsc.maven</groupId>
         <artifactId>maven-processor-plugin</artifactId>
-        <version>2.2.4</version>
+        <version>3.1.0</version>
         <executions>
-          <!-- Run the annotation processor on vertx-core and generate the jython API -->
+          <!-- Run the annotation processor on vertx-core and generate the Jython API -->
           <execution>
             <id>generate-vertx-core</id>
             <goals>
@@ -241,7 +207,7 @@
                 <processor>io.vertx.docgen.DocGenProcessor</processor>
               </processors>
               <optionMap>
-                <docgen.output>${asciidoc.dir}/python</docgen.output>
+                <docgen.output>${asciidoc.dir}/jython</docgen.output>
               </optionMap>
               <sourceDirectory>${project.build.directory}/sources/vertx-core</sourceDirectory>
             </configuration>
@@ -262,7 +228,11 @@
                 <processor>io.vertx.docgen.DocGenProcessor</processor>
               </processors>
               <optionMap>
-                <docgen.output>${asciidoc.dir}/python</docgen.output>
+                <docgen.output>${asciidoc.dir}/jython</docgen.output>
+
+                <maven.groupId>${project.groupId}</maven.groupId>
+                <maven.artifactId>${project.artifactId}</maven.artifactId>
+                <maven.version>${project.version}</maven.version>
               </optionMap>
               <sourceDirectory>src/main/docoverride</sourceDirectory>
             </configuration>
@@ -293,32 +263,40 @@
           <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
+            <version>4.11</version>
           </dependency>
         </dependencies>
       </plugin>
       <plugin>
         <groupId>org.asciidoctor</groupId>
         <artifactId>asciidoctor-maven-plugin</artifactId>
-        <version>1.5.2</version>
         <executions>
           <execution>
             <goals>
               <goal>process-asciidoc</goal>
             </goals>
             <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>package-docs</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
             <configuration>
-              <sourceDirectory>${asciidoc.dir}</sourceDirectory>
-              <outputDirectory>${project.build.directory}/docs/vertx-core</outputDirectory>
-              <backend>html</backend>
-              <doctype>book</doctype>
-              <preserveDirectories>true</preserveDirectories>
-              <relativeBaseDir>true</relativeBaseDir>
+              <attach>true</attach>
+              <descriptors>
+                <descriptor>src/main/assembly/docs.xml</descriptor>
+              </descriptors>
             </configuration>
           </execution>
         </executions>
       </plugin>
     </plugins>
-  </build>
-
+   </build>
 </project>
