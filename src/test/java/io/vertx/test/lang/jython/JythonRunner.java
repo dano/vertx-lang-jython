@@ -29,21 +29,15 @@ public class JythonRunner {
   }
 
   public void run(String scriptName, String className, String testName) throws Exception {
-    try {
-      ScriptEngineManager manager = new ScriptEngineManager();
-      ScriptEngine engine = manager.getEngineByName("python");
-      if (engine == null) {
-        throw new RuntimeException("Couldn't find the engine");
-      }
-      String moduleName = getModuleName(scriptName);
-      engine.eval("import " + moduleName);
-      if (className != null) {
-        engine.eval(moduleName + "." + className + "('" + testName + "').debug()");
-      } else {
-        engine.eval(moduleName + "." + testName + "()");
-      }
-    } catch (ScriptException e) {
-      throw new AssertionError(e.getCause());
+    System.setProperty("python.options.internalTablesImpl","weak");
+    Options.includeJavaStackInExceptions = false;
+    PythonInterpreter py = new PythonInterpreter(null, new PySystemState());
+    String moduleName = getModuleName(scriptName);
+    py.exec("import " + moduleName);
+    if (className != null) {
+      py.exec(moduleName + "." + className + "('" + testName + "').debug()");
+    } else {
+      py.exec(moduleName + "." + testName + "()");
     }
   }
   private String getModuleName(String scriptName) {
