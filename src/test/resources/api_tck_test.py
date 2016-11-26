@@ -3,6 +3,7 @@ import unittest
 from io.vertx.codegen.testmodel import RefedInterface1Impl
 from io.vertx.codegen.testmodel import TestInterfaceImpl
 import org.junit.ComparisonFailure
+import java.lang.AssertionError
 
 from acme_jython.pkg.my_interface import MyInterface
 from testmodel_jython.testmodel.factory import Factory
@@ -155,17 +156,17 @@ class TestTCKAPI(unittest.TestCase):
     def testObjectParam(self):
         obj.method_with_object_param('null', None)
         obj.method_with_object_param('string', 'wibble')
-        obj.method_with_object_param('True', True)
-        obj.method_with_object_param('False', False)
+        obj.method_with_object_param('true', True)
+        obj.method_with_object_param('false', False)
         obj.method_with_object_param('long', 123)
         obj.method_with_object_param('double', 123.456)
-        json_obj = {"foo" : "hello", "bar" : 123}
+        json_obj = {"foo": "hello", "bar": 123}
         obj.method_with_object_param('JsonObject', json_obj)
         json_arr = ["foo", "bar", "wib"]
         obj.method_with_object_param('JsonArray', json_arr)
 
     def testDataObjectParam(self):
-        data_object = {"foo" : "hello", "bar" : 123, "wibble" : 1.23}
+        data_object = {"foo": "hello", "bar": 123, "wibble": 1.23}
         obj.method_with_data_object_param(**data_object)
 
     def testMethodWithHandlerDataObject(self):
@@ -201,10 +202,10 @@ class TestTCKAPI(unittest.TestCase):
 
     def testMethodWithHandlerStringReturn(self):
         handler = obj.method_with_handler_string_return("the-result")
-        handler.handle("the-result")
+        handler("the-result")
         failed = False
         try:
-            handler.handle("unexpected")
+            handler("unexpected")
         except org.junit.ComparisonFailure:
             failed = True
         self.assertEqual(True, failed)
@@ -214,31 +215,31 @@ class TestTCKAPI(unittest.TestCase):
         def h(val):
             d['result'] = val
         handler = obj.method_with_handler_generic_return(h)
-        handler.handle("the-result")
+        handler("the-result")
         self.assertEqual(d['result'], "the-result")
-        handler.handle(obj)
+        handler(obj)
         self.assertEqual(d['result'], obj)
 
     def testMethodWithHandlerVertxGenReturn(self):
         handler = obj.method_with_handler_vertx_gen_return("the-result")
         refed_obj.set_string('the-result')
-        handler.handle(refed_obj)
+        handler(refed_obj)
 
     def testMethodWithHandlerAsyncResultStringReturn(self):
         succeeding_handler = obj.method_with_handler_async_result_string_return("the-result", False)
-        succeeding_handler.handle(None, "the-result")
+        succeeding_handler("the-result", None)
         failed = False
         try:
-            succeeding_handler.handle(None)
-        except org.junit.ComparisonFailure:
+            succeeding_handler(None)
+        except java.lang.AssertionError:
             failed = True
         self.assertEqual(failed, True)
         failing_handler = obj.method_with_handler_async_result_string_return("an-error", True)
-        failing_handler.handle("an-error")
+        failing_handler(None, "an-error")
         failed = False
         try:
-            failing_handler.handle(None, "unexpected")
-        except org.junit.ComparisonFailure:
+            failing_handler("unexpected", None)
+        except java.lang.AssertionError:
             failed = True
         self.assertEquals(failed, True)
 
@@ -251,17 +252,17 @@ class TestTCKAPI(unittest.TestCase):
                 dct['result'] = err
 
         succeeding_handler = obj.method_with_handler_async_result_generic_return(h)
-        succeeding_handler.handle(None, "the-result")
+        succeeding_handler("the-result", None)
         self.assertEquals(dct['result'], "the-result")
-        succeeding_handler.handle(None, obj)
+        succeeding_handler(obj, None)
         self.assertEquals(dct['result'], obj)
 
     def testMethodWithHandlerAsyncResultVertxGenReturn(self):
         handler = obj.method_with_handler_async_result_vertx_gen_return("the-async-result", False)
         refed_obj.set_string('the-async-result')
-        handler.handle(None, refed_obj)
+        handler(refed_obj, None)
         handler = obj.method_with_handler_async_result_vertx_gen_return("the-async-failure", True)
-        handler.handle("the-async-failure", None)
+        handler(None, "the-async-failure")
 
     def testMethodWithHandlerUserTypes(self):
         dct = {'count': 0}
